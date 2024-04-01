@@ -1,4 +1,7 @@
 package pl.pomoku.minecraftkubernetesservice.repository;
 
-public class ServerResourceRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+import pl.pomoku.minecraftkubernetesservice.entity.ServerResource;
+
+public interface ServerResourceRepository extends JpaRepository<ServerResource, Long> {
 }
