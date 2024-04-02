@@ -4,7 +4,9 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.utils.Serialization;
+import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.dsl.ServiceResource;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,10 @@ import pl.pomoku.minecraftkubernetesservice.repository.ServerRepository;
 import pl.pomoku.minecraftkubernetesservice.repository.ServerResourceRepository;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 @Service
@@ -57,7 +63,7 @@ public class ServerService {
         serverRepository.save(server);
         serverResourceRepository.save(createServerResource(request, server));
 
-        return ResponseEntity.ok("Server created successfully");
+        return ResponseEntity.ok("Server created successfully with id: %s".formatted(id));
     }
 
     private ServerResource createServerResource(ServerCreateRequest request, Server server) {
@@ -71,7 +77,8 @@ public class ServerService {
         io.fabric8.kubernetes.api.model.Service service = client.services().createOrReplace(createService(request));
 
         //create deployments
-        Deployment deployment = client.apps().deployments().createOrReplace(createDeployment(request));
+        Deployment deployment = client.apps().deployments().createOrReplace(createDeployment(request, pvc));
+
 
         ServerResource serverResource = ServerResource.builder()
                 .server(server)
@@ -91,37 +98,60 @@ public class ServerService {
         return serverRepository.existsById(id);
     }
 
+    @Transactional
     public ResponseEntity<?> remove(UUID id) {
         if (isExistById(id)) {
-//            serverRepository.deleteById(id);
-//            deleteServer(id, serverRepository.getById(id).getType());
-            System.out.println(serverRepository.getById(id).getServerResources());
+            Server server = serverRepository.getById(id);
+            deleteServerResources(server.getServerResources());
+            serverRepository.delete(server);
+
+            try {
+                Path dir = Paths.get(server.getPath()); //path to the directory
+                Files
+                        .walk(dir) // Traverse the file tree in depth-first order
+                        .sorted(Comparator.reverseOrder())
+                        .forEach(path -> {
+                            try {
+                                System.out.println("Deleting: " + path);
+                                Files.delete(path);  //delete each file or directory
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        });
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
             return ResponseEntity.ok("Delete server with ID: %s".formatted(id));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Not found server with ID: %s".formatted(id));
     }
 
-    public void deleteServer(UUID id, ServerType type) {
+    public void deleteServerResources(ServerResource resource) {
 
-//        Resource<PersistentVolume> pvResource = client.persistentVolumes().withName(pvName);
-//        if (pvResource != null) {
-//            pvResource.delete();
-//        }
-//
-//        Resource<PersistentVolumeClaim> pvcResource = client.persistentVolumeClaims().withName(pvcName);
-//        if (pvcResource != null) {
-//            pvcResource.delete();
-//        }
-//
-//        ServiceResource<io.fabric8.kubernetes.api.model.Service> serviceResource = client.services().withName(serviceName);
-//        if (serviceResource != null) {
-//            serviceResource.delete();
-//        }
-//
-//        Resource<Deployment> deploymentResource = client.apps().deployments().withName(deploymentName);
-//        if (deploymentResource != null) {
-//            deploymentResource.delete();
-//        }
+        Resource<PersistentVolumeClaim> pvcResource = client.persistentVolumeClaims().withName(resource.getPvcName());
+        if (pvcResource != null) {
+            pvcResource.delete();
+            System.out.println("Usunięto pvc - id: %s".formatted(resource.getPvcName()));
+        }
+
+        Resource<PersistentVolume> pvResource = client.persistentVolumes().withName(resource.getPvName());
+        if (pvResource != null) {
+            pvResource.delete();
+            System.out.println("Usunięto pv - id: %s".formatted(resource.getPvName()));
+        }
+
+        ServiceResource<io.fabric8.kubernetes.api.model.Service> serviceResource = client.services().withName(resource.getServiceName());
+        if (serviceResource != null) {
+            serviceResource.delete();
+            System.out.println("Usunięto service - id: %s".formatted(resource.getServiceName()));
+        }
+
+        Resource<Deployment> deploymentResource = client.apps().deployments().withName(resource.getDeploymentName());
+        if (deploymentResource != null) {
+            deploymentResource.delete();
+            System.out.println("Usunięto deployment - id: %s".formatted(resource.getDeploymentName()));
+        }
     }
 
     private PersistentVolume createPV(String path, ServerCreateRequest request) {
@@ -147,6 +177,7 @@ public class ServerService {
         pvSpec.setHostPath(hostPath);
 
         pv.setSpec(pvSpec);
+//        System.out.println(Serialization.asYaml(pv));
         return pv;
     }
 
@@ -168,6 +199,7 @@ public class ServerService {
         pvcSpec.setResources(requests);
 
         pvc.setSpec(pvcSpec);
+//        System.out.println(Serialization.asYaml(pvc));
         return pvc;
     }
 
@@ -199,10 +231,11 @@ public class ServerService {
         }
 
         service.setSpec(serviceSpec);
+//        System.out.println(Serialization.asYaml(service));
         return service;
     }
 
-    private Deployment createDeployment(ServerCreateRequest request) {
+    private Deployment createDeployment(ServerCreateRequest request, PersistentVolumeClaim pvc) {
         Deployment deployment = new Deployment();
         deployment.setApiVersion("apps/v1");
         deployment.setKind("Deployment");
@@ -251,7 +284,7 @@ public class ServerService {
         podSpec.setContainers(Collections.singletonList(container));
 
         PersistentVolumeClaimVolumeSource pvcSource = new PersistentVolumeClaimVolumeSource();
-        pvcSource.setClaimName("minecraft-" + type.toString().toLowerCase() + "-pvc");
+        pvcSource.setClaimName(pvc.getMetadata().getName());
 
         Volume volume = new Volume();
         volume.setName("minecraft-" + type.toString().toLowerCase() + "-pv-storage");
@@ -270,7 +303,7 @@ public class ServerService {
         deploymentSpec.setSelector(selector);
         deployment.setSpec(deploymentSpec);
 
-        System.out.println(Serialization.asYaml(deployment));
+//        System.out.println(Serialization.asYaml(deployment));
         return deployment;
     }
 

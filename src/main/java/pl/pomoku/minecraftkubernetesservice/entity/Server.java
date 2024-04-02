@@ -28,8 +28,9 @@ public class Server {
     private int port;
 
     @OneToMany
+    @ToString.Exclude
     private List<Server> networkServers;
 
-    @OneToMany(mappedBy = "server", cascade = CascadeType.ALL)
-    private List<ServerResource> serverResources;
+    @OneToOne(mappedBy = "server", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private ServerResource serverResources;
 }
