@@ -8,6 +8,7 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.ServiceResource;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -16,11 +17,13 @@ import pl.pomoku.minecraftkubernetesservice.entity.Server;
 import pl.pomoku.minecraftkubernetesservice.entity.ServerResource;
 import pl.pomoku.minecraftkubernetesservice.entity.ServerType;
 import pl.pomoku.minecraftkubernetesservice.entity.Status;
+import pl.pomoku.minecraftkubernetesservice.exception.AppException;
 import pl.pomoku.minecraftkubernetesservice.repository.ServerRepository;
 import pl.pomoku.minecraftkubernetesservice.repository.ServerResourceRepository;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.ParameterizedType;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,11 +31,13 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ServerService {
     private final ServerRepository serverRepository;
     private final ServerResourceRepository serverResourceRepository;
     private final KubernetesClient client;
     private static final String path = "/home/hubirto/Desktop/servers";
+    private static final String MINECRAFT_LABEL_PREFIX = "minecraft-";
 
     public ResponseEntity<?> create(ServerCreateRequest request) {
         //check if port used
@@ -91,6 +96,9 @@ public class ServerService {
     }
 
     public Server getById(UUID id) {
+        if (!isExistById(id)) {
+            throw new AppException("Not found server with id: %s".formatted(id), HttpStatus.NOT_FOUND);
+        }
         return serverRepository.getById(id);
     }
 
@@ -128,29 +136,40 @@ public class ServerService {
     }
 
     public void deleteServerResources(ServerResource resource) {
-
         Resource<PersistentVolumeClaim> pvcResource = client.persistentVolumeClaims().withName(resource.getPvcName());
-        if (pvcResource != null) {
-            pvcResource.delete();
-            System.out.println("Usunięto pvc - id: %s".formatted(resource.getPvcName()));
-        }
+        deleteResource(pvcResource, resource.getPvcName());
 
         Resource<PersistentVolume> pvResource = client.persistentVolumes().withName(resource.getPvName());
-        if (pvResource != null) {
-            pvResource.delete();
-            System.out.println("Usunięto pv - id: %s".formatted(resource.getPvName()));
-        }
+        deleteResource(pvResource, resource.getPvName());
 
         ServiceResource<io.fabric8.kubernetes.api.model.Service> serviceResource = client.services().withName(resource.getServiceName());
-        if (serviceResource != null) {
-            serviceResource.delete();
-            System.out.println("Usunięto service - id: %s".formatted(resource.getServiceName()));
-        }
+        deleteResource(serviceResource, resource.getServiceName());
 
         Resource<Deployment> deploymentResource = client.apps().deployments().withName(resource.getDeploymentName());
-        if (deploymentResource != null) {
-            deploymentResource.delete();
-            System.out.println("Usunięto deployment - id: %s".formatted(resource.getDeploymentName()));
+        deleteResource(deploymentResource, resource.getDeploymentName());
+    }
+
+    private void deleteResource(Resource<?> resource, String resourceName) {
+        if (resource != null) {
+            resource.delete();
+            log.info("Delete {} with name: {}", getResourceType(resource), resourceName);
+        }
+    }
+
+    private String getResourceType(Resource<?> resource) {
+        ParameterizedType type = (ParameterizedType) resource.getClass().getGenericSuperclass();
+        Class<?> resourceClass = (Class<?>) type.getActualTypeArguments()[0];
+
+        if (resourceClass == Service.class) {
+            return "Service";
+        } else if (resourceClass == PersistentVolumeClaim.class) {
+            return "Persistent Volume Claim";
+        } else if (resourceClass == PersistentVolume.class) {
+            return "Persistent Volume";
+        } else if (resourceClass == Deployment.class) {
+            return "Deployment";
+        } else {
+            return "Unknown";
         }
     }
 
