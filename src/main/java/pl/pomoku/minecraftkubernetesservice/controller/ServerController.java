@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.pomoku.minecraftkubernetesservice.dto.request.ServerCreateRequest;
-import pl.pomoku.minecraftkubernetesservice.entity.Server;
 import pl.pomoku.minecraftkubernetesservice.service.ServerService;
 
 import java.time.Duration;
@@ -70,6 +69,11 @@ public class ServerController {
     @GetMapping("/info/{id}")
     public ResponseEntity<?> info(@PathVariable UUID id) {
         return ResponseEntity.ok(serverService.getById(id));
+    }
+
+    @GetMapping("/allNames")
+    public ResponseEntity<?> all() {
+        return ResponseEntity.ok(serverService.getAllNames());
     }
 
     @DeleteMapping("/remove/{id}")

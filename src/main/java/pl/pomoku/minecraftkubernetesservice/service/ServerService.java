@@ -322,4 +322,9 @@ public class ServerService {
         return deployment;
     }
 
+    public Set<String> getAllNames() {
+        Set<String> serversNames = serverRepository.getAllNames();
+        if(serversNames.isEmpty()) throw new AppException("Not found any server", HttpStatus.NOT_FOUND);
+        return serversNames;
+    }
 }
