@@ -1,5 +1,6 @@
 package pl.pomoku.minecraftkubernetesservice.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,6 +14,8 @@ public class ServerResource {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
+    @JsonIgnore
     @ToString.Exclude
     @OneToOne
     private Server server;

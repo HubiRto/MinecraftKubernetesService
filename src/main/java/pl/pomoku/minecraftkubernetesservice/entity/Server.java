@@ -27,7 +27,7 @@ public class Server {
     private Status status;
     private int port;
 
-    @OneToMany
+    @OneToMany(fetch = FetchType.EAGER)
     @ToString.Exclude
     private List<Server> networkServers;
 

@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import pl.pomoku.minecraftkubernetesservice.dto.request.ServerCreateRequest;
+import pl.pomoku.minecraftkubernetesservice.dto.response.ServerInfoResponse;
 import pl.pomoku.minecraftkubernetesservice.entity.Server;
 import pl.pomoku.minecraftkubernetesservice.entity.ServerResource;
 import pl.pomoku.minecraftkubernetesservice.entity.ServerType;
@@ -42,7 +43,7 @@ public class ServerService {
     public ResponseEntity<?> create(ServerCreateRequest request) {
         //check if port used
         if (serverRepository.existsByPort(request.port())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Port is already used");
+            throw new AppException("Port %s is already exist".formatted(request.port()), HttpStatus.BAD_REQUEST);
         }
 
         //create server in database
@@ -64,7 +65,7 @@ public class ServerService {
 
         //save path folder in database
         //można, zamiast tego użyć mechanizmów bazy danych
-        server.setPath(path + "/" + id + "/data");
+        server.setPath(path + "/" + id);
         serverRepository.save(server);
         serverResourceRepository.save(createServerResource(request, server));
 
@@ -95,11 +96,24 @@ public class ServerService {
         return serverResource;
     }
 
-    public Server getById(UUID id) {
+    public ServerInfoResponse getById(UUID id) {
         if (!isExistById(id)) {
             throw new AppException("Not found server with id: %s".formatted(id), HttpStatus.NOT_FOUND);
         }
-        return serverRepository.getById(id);
+        Server server = serverRepository.getById(id);
+        return ServerInfoResponse.builder()
+                .serverResources(server.getServerResources())
+                .networkServers(server.getNetworkServers().stream().map(i -> i.getId().toString()).toList())
+                .id(server.getId())
+                .disk(server.getDisk())
+                .name(server.getName())
+                .path(server.getPath())
+                .port(server.getPort())
+                .ram(server.getRam())
+                .status(server.getStatus())
+                .type(server.getType())
+                .version(server.getVersion())
+                .build();
     }
 
     public boolean isExistById(UUID id) {
@@ -152,27 +166,9 @@ public class ServerService {
     private void deleteResource(Resource<?> resource, String resourceName) {
         if (resource != null) {
             resource.delete();
-            log.info("Delete {} with name: {}", getResourceType(resource), resourceName);
+            log.info("Delete: {}", resourceName);
         }
     }
-
-    private String getResourceType(Resource<?> resource) {
-        ParameterizedType type = (ParameterizedType) resource.getClass().getGenericSuperclass();
-        Class<?> resourceClass = (Class<?>) type.getActualTypeArguments()[0];
-
-        if (resourceClass == Service.class) {
-            return "Service";
-        } else if (resourceClass == PersistentVolumeClaim.class) {
-            return "Persistent Volume Claim";
-        } else if (resourceClass == PersistentVolume.class) {
-            return "Persistent Volume";
-        } else if (resourceClass == Deployment.class) {
-            return "Deployment";
-        } else {
-            return "Unknown";
-        }
-    }
-
     private PersistentVolume createPV(String path, ServerCreateRequest request) {
         PersistentVolume pv = new PersistentVolume();
         pv.setApiVersion("v1");
