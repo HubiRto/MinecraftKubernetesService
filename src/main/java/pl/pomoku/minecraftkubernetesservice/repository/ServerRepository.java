@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 import pl.pomoku.minecraftkubernetesservice.entity.Server;
 import pl.pomoku.minecraftkubernetesservice.entity.ServerType;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -13,6 +14,4 @@ import java.util.UUID;
 public interface ServerRepository extends JpaRepository<Server, UUID> {
     Server getById(UUID id);
     boolean existsByPort(int port);
-    @Query("SELECT s.name FROM Server s")
-    Set<String> getAllNames();
 }

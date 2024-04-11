@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@stomp/stompjs": "^7.0.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -10,12 +11,21 @@
     "@types/node": "^16.18.95",
     "@types/react": "^18.2.74",
     "@types/react-dom": "^18.2.24",
+    "antd": "^5.16.1",
     "axios": "^1.6.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
+    "react-router-dom": "^6.22.3",
+    "react-scripts": "^5.0.1",
+    "react-stomp": "^5.1.0",
+    "react-use-websocket": "^3.0.0",
+    "socket.io-client": "^4.7.5",
+    "sockjs": "^0.3.24",
+    "sockjs-client": "^1.6.1",
+    "stompjs": "^2.3.3",
     "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "websocket": "^1.0.34"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -40,5 +50,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/sockjs-client": "^1.5.4",
+    "@types/stompjs": "^2.3.9"
   }
 }

@@ -1,15 +1,15 @@
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import axios from "axios";
-import * as Console from "console";
+import {ServerBasicData} from "../../Models/ServerBasicData";
+import {Link} from "react-router-dom";
 
-const ServerPage = () => {
-    const [servers, setServers] = useState([]);
+const ServerPage: React.FC = () => {
+    const [servers, setServers] = useState([] as ServerBasicData[]);
 
     useEffect(() => {
         const fetchServers = async () => {
             try {
-                const response = await axios.get('http://127.0.0.1:8080/api/v1/server/allNames');
-                console.log(response.data)
+                const response = await axios.get<ServerBasicData[]>('http://127.0.0.1:8080/api/v1/server/allNames');
                 setServers(response.data);
             } catch (error) {
                 console.error('Błąd pobierania serwerów:', error);
@@ -22,10 +22,13 @@ const ServerPage = () => {
         <div>
             <h2>Lista Serwerów:</h2>
             <ul>
-                {servers.map((serverName, index) => (
-                    <li key={index}>{serverName}</li>
+                {servers.map(server => (
+                    <li key={server.id}>{server.name} - <Link to={`/servers/info/${server.id}`}>{server.id}</Link></li>
                 ))}
             </ul>
+            <Link to="/servers/create">
+                <button>Add server</button>
+            </Link>
         </div>
     );
 };
