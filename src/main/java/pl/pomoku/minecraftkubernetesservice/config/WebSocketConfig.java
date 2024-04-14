@@ -20,27 +20,27 @@ import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON;
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(@NonNull MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/topic");
-        registry.setApplicationDestinationPrefixes("/ws");
-//        registry.setUserDestinationPrefix("/user");
+        registry.enableSimpleBroker("/user");
+        registry.setApplicationDestinationPrefixes("/app");
+        registry.setUserDestinationPrefix("/user");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/sba-websocket")
+        registry.addEndpoint("/ws")
 //                .setAllowedOriginPatterns("*")
                 .setAllowedOrigins("http://localhost:4200/", "http://localhost:4200/")
                 .withSockJS();
     }
 
-//    @Override
-//    public boolean configureMessageConverters(@NonNull List<MessageConverter> messageConverters) {
-//        DefaultContentTypeResolver resolver = new DefaultContentTypeResolver();
-//        resolver.setDefaultMimeType(APPLICATION_JSON);
-//        MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
-//        converter.setObjectMapper(new ObjectMapper());
-//        converter.setContentTypeResolver(resolver);
-//        messageConverters.add(converter);
-//        return false;
-//    }
+    @Override
+    public boolean configureMessageConverters(@NonNull List<MessageConverter> messageConverters) {
+        DefaultContentTypeResolver resolver = new DefaultContentTypeResolver();
+        resolver.setDefaultMimeType(APPLICATION_JSON);
+        MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
+        converter.setObjectMapper(new ObjectMapper());
+        converter.setContentTypeResolver(resolver);
+        messageConverters.add(converter);
+        return false;
+    }
 }

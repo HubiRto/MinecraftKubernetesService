@@ -25,6 +25,6 @@ public class ServerInfoResponse {
     private String version;
     private Status status;
     private int port;
-    private List<String> networkServers;
-    private ServerResource serverResources;
+    private String ipAddress;
+    private int rconPort;
 }

@@ -4,6 +4,7 @@ package pl.pomoku.minecraftkubernetesservice.service;
 import pl.pomoku.minecraftkubernetesservice.dto.request.ServerCreateRequest;
 import pl.pomoku.minecraftkubernetesservice.entity.Server;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -14,5 +15,6 @@ public interface ServerService {
     Boolean isExistById(UUID id);
     List<Server> getAll();
     Server getById(UUID id);
-    String getLogsById(UUID id);
+    List<String> getLogsById(UUID id) throws IOException;
+    String getRAMUsage(UUID id);
 }

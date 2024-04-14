@@ -3,8 +3,8 @@ package pl.pomoku.minecraftkubernetesservice.utils;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.metrics.v1beta1.PodMetrics;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.ServiceResource;
 import io.fabric8.kubernetes.client.utils.Serialization;
@@ -33,6 +33,12 @@ public class ServerResourceManager {
         return client.pods().inNamespace("default").withName(pod.getMetadata().getName()).getLog(true);
     }
 
+    public String getServerRamUsage(String podName) {
+        Pod pod = getPodByDeploymentName(podName);
+        PodMetrics podMetrics = client.top().pods().metrics("default", pod.getMetadata().getName());
+        return podMetrics.getContainers().get(0).getUsage().get("memory").getAmount();
+    }
+
     public Pod getPodByDeploymentName(String deploymentName) {
         List<Pod> pods = client
                 .pods()
@@ -48,7 +54,6 @@ public class ServerResourceManager {
             return null;
         }
 
-        // Załóżmy, że zwrócimy pierwszy pasujący pod
         return matchingPods.get(0);
     }
 
@@ -65,6 +70,8 @@ public class ServerResourceManager {
         //create deployments
         Deployment deployment = client.apps().deployments().createOrReplace(createDeployment(request, pvc));
 
+        System.out.println(deployment.getMetadata().getName());
+        System.out.println(deployment.getSpec().getTemplate().getMetadata().getName());
 
         ServerResource serverResource = ServerResource.builder()
                 .server(server)

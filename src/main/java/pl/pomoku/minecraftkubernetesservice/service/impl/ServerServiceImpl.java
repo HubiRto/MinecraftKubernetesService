@@ -14,6 +14,7 @@ import pl.pomoku.minecraftkubernetesservice.entity.Status;
 import pl.pomoku.minecraftkubernetesservice.exception.AppException;
 import pl.pomoku.minecraftkubernetesservice.repository.ServerRepository;
 import pl.pomoku.minecraftkubernetesservice.repository.ServerResourceRepository;
+import pl.pomoku.minecraftkubernetesservice.service.LogFileWatcherService;
 import pl.pomoku.minecraftkubernetesservice.service.ServerService;
 import pl.pomoku.minecraftkubernetesservice.utils.ServerResourceManager;
 
@@ -22,10 +23,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static java.lang.Boolean.TRUE;
 
@@ -36,6 +34,7 @@ public class ServerServiceImpl implements ServerService {
     private final ServerRepository serverRepository;
     private final ServerResourceRepository serverResourceRepository;
     private final ServerResourceManager serverResourceManager;
+    private final LogFileWatcherService logFileWatcherService;
     @Value("${application.volumes.path}")
     private String PATH;
 
@@ -78,12 +77,35 @@ public class ServerServiceImpl implements ServerService {
     }
 
     @Override
-    public String getLogsById(UUID id) {
+    public List<String> getLogsById(UUID id) throws IOException {
+        if (!isExistById(id)) {
+            throw new AppException("Not found server with id: %s".formatted(id), HttpStatus.NOT_FOUND);
+        }
+
+        Path logFilePath = getLogsPathById(id);
+        logFileWatcherService.addFileToMonitor(id, logFilePath);
+        return readLinesFromFile(logFilePath);
+    }
+
+    private Path getLogsPathById(UUID id) {
+        return Paths.get(PATH + "/" + id + "/data/logs/latest.log");
+    }
+
+    private static List<String> readLinesFromFile(Path filePath) throws IOException {
+        List<String> lines = new ArrayList<>();
+        if (Files.exists(filePath) && Files.isRegularFile(filePath)) {
+            lines = Files.readAllLines(filePath);
+        }
+        return lines;
+    }
+
+    @Override
+    public String getRAMUsage(UUID id) {
         if (!isExistById(id)) {
             throw new AppException("Not found server with id: %s".formatted(id), HttpStatus.NOT_FOUND);
         }
         ServerResource resource = serverResourceRepository.getByServer(serverRepository.getById(id));
-        return serverResourceManager.getServerLogsByPodName(resource.getDeploymentName());
+        return serverResourceManager.getServerRamUsage(resource.getDeploymentName());
     }
 
     @Override
