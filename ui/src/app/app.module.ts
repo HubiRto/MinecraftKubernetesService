@@ -8,6 +8,7 @@ import {CommonModule} from "@angular/common";
 import {HeaderComponent} from "./components/header/header.component";
 import {StompServiceService} from "./services/websocket/stomp-service.service";
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import {HighchartsChartModule} from "highcharts-angular";
 
 @NgModule({
   declarations: [
@@ -18,7 +19,8 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
-    HeaderComponent
+    HeaderComponent,
+    HighchartsChartModule
   ],
   providers: [StompServiceService, provideAnimationsAsync()],
   bootstrap: [AppComponent]
