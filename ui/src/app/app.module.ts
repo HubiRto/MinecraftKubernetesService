@@ -7,6 +7,7 @@ import {HttpClientModule} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {HeaderComponent} from "./components/header/header.component";
 import {StompServiceService} from "./services/websocket/stomp-service.service";
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 @NgModule({
   declarations: [
@@ -19,7 +20,7 @@ import {StompServiceService} from "./services/websocket/stomp-service.service";
     HttpClientModule,
     HeaderComponent
   ],
-  providers: [StompServiceService],
+  providers: [StompServiceService, provideAnimationsAsync()],
   bootstrap: [AppComponent]
 })
 export class AppModule {
