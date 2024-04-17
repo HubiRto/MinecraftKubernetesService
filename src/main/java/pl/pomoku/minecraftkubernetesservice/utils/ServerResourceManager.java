@@ -246,7 +246,6 @@ public class ServerResourceManager {
         rconPasswordVar.setValue(String.valueOf(1234));
         envs.add(rconPasswordVar);
 
-
         container.setEnv(envs);
 
         VolumeMount volumeMount = new VolumeMount();

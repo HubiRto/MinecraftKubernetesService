@@ -1,6 +1,7 @@
 package pl.pomoku.minecraftkubernetesservice.service;
 
 
+import org.springframework.http.ResponseEntity;
 import pl.pomoku.minecraftkubernetesservice.dto.request.ServerCreateRequest;
 import pl.pomoku.minecraftkubernetesservice.entity.Server;
 
@@ -17,4 +18,5 @@ public interface ServerService {
     Server getById(UUID id);
     List<String> getLogsById(UUID id) throws IOException;
     String getRAMUsage(UUID id);
+    String execCommand(UUID id, String command) throws IOException;
 }

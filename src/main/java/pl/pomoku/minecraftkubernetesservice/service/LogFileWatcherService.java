@@ -5,6 +5,6 @@ import java.nio.file.Path;
 import java.util.UUID;
 
 public interface LogFileWatcherService {
-    void addFileToMonitor(UUID id, Path path) throws IOException;
+    void addFileToMonitor(UUID id, Path path);
     void removeFileFromMonitor(UUID id);
 }

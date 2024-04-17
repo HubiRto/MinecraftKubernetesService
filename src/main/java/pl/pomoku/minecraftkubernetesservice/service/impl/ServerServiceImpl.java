@@ -17,13 +17,18 @@ import pl.pomoku.minecraftkubernetesservice.repository.ServerResourceRepository;
 import pl.pomoku.minecraftkubernetesservice.service.LogFileWatcherService;
 import pl.pomoku.minecraftkubernetesservice.service.ServerService;
 import pl.pomoku.minecraftkubernetesservice.utils.ServerResourceManager;
+import pl.pomoku.minecraftkubernetesservice.utils.rcon.Rcon;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.Boolean.TRUE;
 
@@ -35,6 +40,8 @@ public class ServerServiceImpl implements ServerService {
     private final ServerResourceRepository serverResourceRepository;
     private final ServerResourceManager serverResourceManager;
     private final LogFileWatcherService logFileWatcherService;
+    private final ConcurrentHashMap<UUID, Rcon> rconClients = new ConcurrentHashMap<>();
+
     @Value("${application.volumes.path}")
     private String PATH;
 
@@ -59,7 +66,12 @@ public class ServerServiceImpl implements ServerService {
         server = serverRepository.save(server);
         UUID id = server.getId();
 
-        new File(PATH + "/" + id.toString() + "/data").mkdirs();
+        String dataDirectoryPath = PATH + "/" + id.toString() + "/data";
+        boolean isCreated = new File(dataDirectoryPath).mkdirs();
+        if (!isCreated) throw new AppException(
+                "Nie udało się utworzyć folderu: %s".formatted(dataDirectoryPath),
+                HttpStatus.INTERNAL_SERVER_ERROR
+        );
 
         server.setPath(PATH + "/" + id);
         serverRepository.save(server);
@@ -70,31 +82,58 @@ public class ServerServiceImpl implements ServerService {
 
     @Override
     public Server getById(UUID id) {
-        if (!isExistById(id)) {
-            throw new AppException("Not found server with id: %s".formatted(id), HttpStatus.NOT_FOUND);
-        }
+        isExistByIdVoid(id);
         return serverRepository.getById(id);
     }
 
     @Override
-    public List<String> getLogsById(UUID id) throws IOException {
-        if (!isExistById(id)) {
-            throw new AppException("Not found server with id: %s".formatted(id), HttpStatus.NOT_FOUND);
-        }
-
+    public List<String> getLogsById(UUID id){
+        isExistByIdVoid(id);
         Path logFilePath = getLogsPathById(id);
         logFileWatcherService.addFileToMonitor(id, logFilePath);
+        addRCONConnection(id);
         return readLinesFromFile(logFilePath);
+    }
+
+    private void addRCONConnection(UUID id) {
+        if (rconClients.containsKey(id)) return;
+        Server server = serverRepository.getById(id);
+
+        Rcon rcon;
+        try {
+            rcon = Rcon.open(server.getIpAddress(), server.getRconPort());
+        } catch (IOException e) {
+            throw new AppException("Nie udało się podłaczyć z RCON", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        try {
+            rcon.authenticate("1234");
+        } catch (IOException e) {
+            try {
+                rcon.close();
+            } catch (IOException ex) {
+                throw new AppException("Nie udało się zamknąć połączenia z RCON", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            throw new AppException("Niepoprawne hasło do klienta RCON", HttpStatus.BAD_REQUEST);
+        }
+        this.rconClients.put(id, rcon);
     }
 
     private Path getLogsPathById(UUID id) {
         return Paths.get(PATH + "/" + id + "/data/logs/latest.log");
     }
 
-    private static List<String> readLinesFromFile(Path filePath) throws IOException {
+    private static List<String> readLinesFromFile(Path filePath) {
         List<String> lines = new ArrayList<>();
         if (Files.exists(filePath) && Files.isRegularFile(filePath)) {
-            lines = Files.readAllLines(filePath);
+            try {
+                lines = Files.readAllLines(filePath);
+            } catch (IOException e) {
+                throw new AppException(
+                        "Nie udało się odczytać nowych linii",
+                        HttpStatus.INTERNAL_SERVER_ERROR
+                );
+            }
         }
         return lines;
     }
@@ -109,8 +148,20 @@ public class ServerServiceImpl implements ServerService {
     }
 
     @Override
+    public String execCommand(UUID id, String command) throws IOException {
+        isExistByIdVoid(id);
+        return this.rconClients.get(id).sendCommand(command);
+    }
+
+    @Override
     public Boolean isExistById(UUID id) {
         return serverRepository.existsById(id);
+    }
+
+    public void isExistByIdVoid(UUID id) {
+        if (!isExistById(id)) {
+            throw new AppException("Not found server with id: %s".formatted(id), HttpStatus.NOT_FOUND);
+        }
     }
 
     @Transactional
@@ -145,7 +196,7 @@ public class ServerServiceImpl implements ServerService {
     @Override
     public List<Server> getAll() {
         List<Server> serversNames = serverRepository.findAll();
-        if (serversNames.isEmpty()){
+        if (serversNames.isEmpty()) {
             throw new AppException("Not found any server", HttpStatus.NOT_FOUND);
         }
         return serversNames;

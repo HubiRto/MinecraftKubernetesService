@@ -3,12 +3,13 @@ package pl.pomoku.minecraftkubernetesservice.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import pl.pomoku.minecraftkubernetesservice.events.LogFileChangeEvent;
+import pl.pomoku.minecraftkubernetesservice.exception.AppException;
 import pl.pomoku.minecraftkubernetesservice.service.LogFileWatcherService;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,22 +30,31 @@ public class LogFileWatcherServiceImpl implements LogFileWatcherService {
      *
      * @param id   identyfikator serwera
      * @param path ścieżka do pliku
-     * @throws IOException gdy wystąpi błąd wejścia/wyjścia
      */
     @Override
-    public void addFileToMonitor(UUID id, Path path) throws IOException {
+    public void addFileToMonitor(UUID id, Path path) {
         if (!Files.exists(path) || !Files.isRegularFile(path)) {
-            throw new IllegalArgumentException("Plik " + path + " nie istnieje lub nie jest plikiem regularnym.");
+            throw new AppException(
+                    "Plik " + path + " nie istnieje lub nie jest plikiem regularnym.",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
 
         if (filePaths.containsValue(path)) return;
 
-        WatchService watchService = FileSystems.getDefault().newWatchService();
-        path.getParent().register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
+        WatchService watchService;
+        try {
+            watchService = FileSystems.getDefault().newWatchService();
+            path.getParent().register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
+        } catch (IOException e) {
+            throw new AppException(
+                    "Nie udało się uruchomić nasłuchiwania pliku",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+
         watchServices.put(id, watchService);
         filePaths.put(id, path);
-
-        System.out.println("dodano plik");
 
         executorService.execute(() -> {
             try {
@@ -69,7 +79,10 @@ public class LogFileWatcherServiceImpl implements LogFileWatcherService {
                     }
                 }
             } catch (InterruptedException | IOException e) {
-                e.printStackTrace();
+                throw new AppException(
+                        "Błąd podczas nasłuchiwania pliku",
+                        HttpStatus.INTERNAL_SERVER_ERROR
+                );
             }
         });
     }
@@ -86,7 +99,7 @@ public class LogFileWatcherServiceImpl implements LogFileWatcherService {
             try {
                 watchService.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new AppException("Nie udało się wyłączyć nasłuchiwacza pliku", HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
         watchServices.remove(id);
