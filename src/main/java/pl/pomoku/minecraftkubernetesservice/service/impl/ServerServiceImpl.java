@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import pl.pomoku.minecraftkubernetesservice.dto.request.ServerCreateRequest;
+import pl.pomoku.minecraftkubernetesservice.dto.response.ServerUsageResponse;
 import pl.pomoku.minecraftkubernetesservice.entity.Server;
 import pl.pomoku.minecraftkubernetesservice.entity.ServerResource;
 import pl.pomoku.minecraftkubernetesservice.entity.ServerType;
@@ -139,12 +140,10 @@ public class ServerServiceImpl implements ServerService {
     }
 
     @Override
-    public String getRAMUsage(UUID id) {
-        if (!isExistById(id)) {
-            throw new AppException("Not found server with id: %s".formatted(id), HttpStatus.NOT_FOUND);
-        }
+    public ServerUsageResponse getRAMUsage(UUID id) {
+        isExistByIdVoid(id);
         ServerResource resource = serverResourceRepository.getByServer(serverRepository.getById(id));
-        return serverResourceManager.getServerRamUsage(resource.getDeploymentName());
+        return serverResourceManager.getServerUsage(resource.getDeploymentName());
     }
 
     @Override

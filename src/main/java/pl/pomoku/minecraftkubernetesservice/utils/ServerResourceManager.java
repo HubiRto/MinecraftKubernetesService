@@ -12,10 +12,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import pl.pomoku.minecraftkubernetesservice.dto.request.ServerCreateRequest;
+import pl.pomoku.minecraftkubernetesservice.dto.response.ServerUsageResponse;
 import pl.pomoku.minecraftkubernetesservice.entity.Server;
 import pl.pomoku.minecraftkubernetesservice.entity.ServerResource;
 import pl.pomoku.minecraftkubernetesservice.entity.ServerType;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -33,10 +35,14 @@ public class ServerResourceManager {
         return client.pods().inNamespace("default").withName(pod.getMetadata().getName()).getLog(true);
     }
 
-    public String getServerRamUsage(String podName) {
+    public ServerUsageResponse getServerUsage(String podName) {
         Pod pod = getPodByDeploymentName(podName);
         PodMetrics podMetrics = client.top().pods().metrics("default", pod.getMetadata().getName());
-        return podMetrics.getContainers().get(0).getUsage().get("memory").getAmount();
+        return new ServerUsageResponse(
+                LocalDateTime.now(),
+                Long.parseLong(podMetrics.getContainers().get(0).getUsage().get("cpu").getAmount()),
+                Long.parseLong(podMetrics.getContainers().get(0).getUsage().get("memory").getAmount())
+        );
     }
 
     public Pod getPodByDeploymentName(String deploymentName) {

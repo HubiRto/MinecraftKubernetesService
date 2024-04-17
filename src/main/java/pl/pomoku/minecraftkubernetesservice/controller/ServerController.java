@@ -82,17 +82,9 @@ public class ServerController {
         return ResponseEntity.ok(serverService.getLogsById(id));
     }
 
-    @GetMapping("/usage/ram/{id}")
+    @GetMapping("/usage/{id}")
     public ResponseEntity<?> getRAMUsage(@PathVariable UUID id) {
-        return ResponseEntity.ok(
-                Response.builder()
-                        .timeStamp(LocalDateTime.now())
-                        .data(Map.of("ramUsage", serverService.getRAMUsage(id)))
-                        .message("Last server logs")
-                        .status(HttpStatus.OK)
-                        .statusCode(HttpStatus.OK.value())
-                        .build()
-        );
+        return ResponseEntity.ok(serverService.getRAMUsage(id));
     }
 
     @PostMapping("/command/exec/{id}")

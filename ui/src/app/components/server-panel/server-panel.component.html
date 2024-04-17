@@ -1,0 +1,26 @@
+<section class="home" [ngClass]="{ 'sidebar-close': sidebarService.isOpen }">
+  <div class="text">Dashboard</div>
+  <div class="container">
+    <div class="terminal">
+      <div class="title-bar">
+        <div class="buttons">
+          <div class="close"></div>
+          <div class="minimize"></div>
+          <div class="zoom"></div>
+        </div>
+        <div class="title">Terminal</div>
+      </div>
+      <div class="content">
+        <div *ngFor="let log of logs">
+          <div [innerHTML]="log"></div>
+        </div>
+      </div>
+      <div class="input-area">
+        <input type="text" placeholder="Type your command here..."
+               (keyup.enter)="addLog(newItem.value); newItem.value = ''" #newItem>
+      </div>
+    </div>
+    <div class="ram-usage-chart" [chart]="ramUsageChart"></div>
+    <div class="cpu-usage-chart" [chart]="cpuUsageChart"></div>
+  </div>
+</section>
