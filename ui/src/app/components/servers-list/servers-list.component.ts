@@ -8,17 +8,19 @@ import {catchError} from "rxjs/operators";
 import {ServerServiceService} from "../../services/server-service.service";
 import {Router, RouterLink} from "@angular/router";
 import {SidebarService} from "../../services/sidebar.service";
+import {HeaderComponent} from "../header/header.component";
 
 @Component({
   selector: 'app-servers-list',
   standalone: true,
-  imports: [
-    NgForOf,
-    AsyncPipe,
-    JsonPipe,
-    CommonModule,
-    RouterLink
-  ],
+    imports: [
+        NgForOf,
+        AsyncPipe,
+        JsonPipe,
+        CommonModule,
+        RouterLink,
+        HeaderComponent
+    ],
   templateUrl: './servers-list.component.html',
   styleUrl: './servers-list.component.css'
 })

@@ -12,6 +12,7 @@ import {interval} from "rxjs";
 import {LineChartModule} from "@swimlane/ngx-charts";
 import {Chart, ChartModule} from "angular-highcharts";
 import {ServerUsage} from "../../interfaces/server-usage";
+import {HeaderComponent} from "../header/header.component";
 
 @Component({
   selector: 'app-server-panel',
@@ -25,7 +26,8 @@ import {ServerUsage} from "../../interfaces/server-usage";
     InfiniteScrollModule,
     NgClass,
     LineChartModule,
-    ChartModule
+    ChartModule,
+    HeaderComponent
   ],
   templateUrl: './server-panel.component.html',
   styleUrl: './server-panel.component.css'
@@ -110,7 +112,7 @@ export class ServerPanelComponent implements OnInit, OnDestroy {
           linearGradient: { x1: 0, x2: 0, y1: 0, y2: 1 },
           stops: [
             [0, '#63c688'],
-            [1, '#94d5ac']
+            [1, '#c4eed4']
           ]
         },
       },

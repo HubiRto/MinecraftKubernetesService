@@ -1,3 +1,4 @@
+<app-header></app-header>
 <section class="home" [ngClass]="{ 'sidebar-close': sidebarService.isOpen }">
   <div class="container">
     <ng-container *ngIf="(appState$ | async) as appState" [ngSwitch]="appState.dataState">

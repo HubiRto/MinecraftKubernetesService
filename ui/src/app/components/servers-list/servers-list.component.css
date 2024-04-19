@@ -33,7 +33,7 @@
 }
 
 .table th {
-  background-color: var(--primary-color); /* Kolor tła dla nagłówków */
+  background-color: #625aa7; /* Kolor tła dla nagłówków */
   color: #fff; /* Kolor tekstu dla nagłówków */
   font-weight: bold;
   text-align: left;
@@ -50,7 +50,7 @@
 }
 
 .table button {
-  background-color: #ff5f56; /* Kolor tła dla przycisku Usuń */
+  background-color: #625aa7; /* Kolor tła dla przycisku Usuń */
   color: #fff; /* Kolor tekstu przycisku Usuń */
   border: none;
   padding: 5px 10px;
