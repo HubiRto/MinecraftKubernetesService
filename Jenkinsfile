@@ -11,7 +11,13 @@ pipeline {
                 sh "mvn clean compile"
             }
         }
-
+        stage('Build docker image') {
+            steps {
+                script {
+                    sh 'docker build -t hubirto/minecraft-kubernetes-service-spring-boot'
+                }
+            }
+        }
     }
 }
 
