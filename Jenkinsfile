@@ -6,13 +6,6 @@ pipeline {
         maven "Maven3"
     }
 
-    environment {
-        APP_NAME = "MinecraftKubernetesService"
-        RELEASE = "1.0.0"
-        DOCKER_USER = "hubirto"
-        DOCKER_PASS = "2iw+$+ufL.ZShvY"
-    }
-
     stages {
         stage('Cleanup Workspace') {
             steps {
@@ -22,7 +15,7 @@ pipeline {
 
         stage('Checkout from SCM') {
             steps {
-                git branch: 'master', credentialsId: 'jenkins-github-token', url: 'https://github.com/HubiRto/MinecraftKubernetesService.git'
+                git branch: 'master', url: 'https://github.com/HubiRto/MinecraftKubernetesService.git'
             }
         }
         stage('Build App') {
