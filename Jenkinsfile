@@ -13,11 +13,11 @@ pipeline {
             }
         }
 
-         stage('Cleanup Workspace') {
+        stage('Checkout from SCM') {
             steps {
                 git branch: 'master', url: 'https://github.com/HubiRto/MinecraftKubernetesService.git'
             }
-         }
+        }
     }
 }
 
