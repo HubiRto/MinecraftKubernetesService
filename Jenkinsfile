@@ -7,7 +7,7 @@ pipeline {
     }
 
     environment {
-        APP_NAME = "MinecraftKubernetesService"
+        APP_NAME = "minecraft-kubernetes-service"
         RELEASE = "1.0.0"
         DOCKER_USER = "hubirto"
         DOCKER_PASS = 'dockerhub'
