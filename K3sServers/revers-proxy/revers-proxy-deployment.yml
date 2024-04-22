@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: revers-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: revers-proxy
+  template:
+    metadata:
+      labels:
+        app: revers-proxy
+    spec:
+      #serviceAccountName: my-serviceaccount
+      # hostNetwork: true
+      containers:
+      - name: revers-proxy
+        image: itzg/bungeecord
+        ports:
+        - containerPort: 8080
+        - containerPort: 25577
+        env:
+          - name: TYPE
+            value: "VELOCITY"
+        volumeMounts:
+          - mountPath: /server
+            name: reverse-proxy-pv-storage
+      volumes:
+      - name: reverse-proxy-pv-storage
+        persistentVolumeClaim:
+          claimName: reverse-proxy-pv-claim
