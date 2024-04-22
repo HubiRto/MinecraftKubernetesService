@@ -4,7 +4,7 @@ spring:
   application:
     name: MinecraftKubernetesService
   datasource:
-    url: jdbc:postgresql://localhost:5432/db
+    url: jdbc:postgresql://192.168.1.216:5432/db
     username: user
     password: password
     driver-class-name: org.postgresql.Driver
