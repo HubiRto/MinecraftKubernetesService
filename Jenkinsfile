@@ -18,6 +18,17 @@ pipeline {
                 git branch: 'master', url: 'https://github.com/HubiRto/MinecraftKubernetesService.git'
             }
         }
+        stage('Build App') {
+            steps {
+                sh "mvn clean package"
+            }
+        }
+
+        stage('Test App') {
+            steps {
+                sh "mvn test"
+            }
+        }
     }
 }
 
