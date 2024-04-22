@@ -2,22 +2,22 @@ pipeline {
     agent any
 
     tools {
-        maven "M3"
+        jdk "Java17"
+        maven "Maven3"
     }
 
     stages {
-        stage('Build') {
+        stage('Cleanup Workspace') {
             steps {
-                sh "mvn clean compile"
+                cleanWs()
             }
         }
-        stage('Build docker image') {
+
+         stage('Cleanup Workspace') {
             steps {
-                script {
-                    sh 'docker build -t hubirto/minecraft-kubernetes-service-spring-boot .'
-                }
+                git branch: 'master', url: 'https://github.com/HubiRto/MinecraftKubernetesService.git'
             }
-        }
+         }
     }
 }
 
