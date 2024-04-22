@@ -52,15 +52,7 @@ public class ServerController {
 
     @GetMapping("/all")
     public ResponseEntity<?> all() {
-        return ResponseEntity.ok(
-                Response.builder()
-                        .timeStamp(LocalDateTime.now())
-                        .data(Map.of("servers", serverService.getAll()))
-                        .message("Servers retrieved")
-                        .status(HttpStatus.OK)
-                        .statusCode(HttpStatus.OK.value())
-                        .build()
-        );
+        return ResponseEntity.ok(serverService.getAll());
     }
 
     @DeleteMapping("/delete/{id}")

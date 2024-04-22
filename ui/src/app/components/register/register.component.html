@@ -5,33 +5,44 @@
   </div>
   <section class="container">
     <div class="wrapper">
-      <form action="">
+      <form [formGroup]="registerForm">
         <h1>Rejestracja</h1>
         <div class="two-forms">
-          <div class="input-box">
-            <input type="text" placeholder="Imię" required>
+          <div class="input-box" [ngClass]="{'error': isFirstNameHaveError()}">
+            <input type="text" placeholder="Imię" required formControlName="firstName">
             <i class="bx bxs-user"></i>
           </div>
-          <div class="input-box">
-            <input type="text" placeholder="Nazwisko" required>
+          <div class="input-box" [ngClass]="{'error': isLastNameHaveError()}">
+            <input type="text" placeholder="Nazwisko" required formControlName="lastName">
             <i class="bx bxs-user"></i>
+          </div>
+          <div class="error-box">
+            <small *ngIf="isFirstNameHaveError()">*Imię jest wymagane</small>
+            <small *ngIf="isLastNameHaveError()">*Nazwisko jest wymagane</small>
           </div>
         </div>
-        <div class="input-box">
-          <input type="text" placeholder="Email" required>
-          <i class="bx bxs-user"></i>
+        <div class="input-box" [ngClass]="{'error': isEmailHaveError()}">
+          <input type="email" placeholder="Email" required formControlName="email">
+          <i class='bx bx-envelope'></i>
+        </div>
+        <div class="error-box" style="margin-top: -20px">
+          <small *ngIf="isEmailHaveTypeError('required')">*Email jest wymagany</small>
+          <small *ngIf="isEmailHaveTypeError('email')">*Niepoprawny format email</small>
         </div>
         <div class="two-forms">
           <div class="input-box">
-            <input type="text" placeholder="Hasło" required>
-            <i class="bx bxs-lock-alt"></i>
+            <input [type]="passwordInputType" placeholder="Hasło" required formControlName="password">
+            <i class="fa {{ this.passwordIcon }}" (click)="hideShowPass()"></i>
           </div>
           <div class="input-box">
-            <input type="text" placeholder="Powtórz hasło" required>
-            <i class="bx bxs-lock-alt"></i>
+            <input [type]="passwordInputType" placeholder="Powtórz hasło" required formControlName="repeatPassword">
+          </div>
+          <div style="flex-basis: 100%;">
+            <small *ngIf="isFirstNameHaveError()">*Imię jest wymagane</small>
+            <small *ngIf="isLastNameHaveError()">*Nazwisko jest wymagane</small>
           </div>
         </div>
-        <button type="submit" class="btn">Stwórz konto</button>
+        <button (click)="onSubmit()" type="submit" class="btn">Stwórz konto</button>
         <div class="register-link">
           <p>Masz już konto? <a [routerLink]='["/auth/login"]'>Zaloguj się</a></p>
         </div>

@@ -14,6 +14,10 @@ import {Chart, ChartModule} from "angular-highcharts";
 import {ServerUsage} from "../../interfaces/server-usage";
 import {HeaderComponent} from "../header/header.component";
 
+interface LoginResponse {
+  token: string;
+}
+
 @Component({
   selector: 'app-server-panel',
   standalone: true,
@@ -37,7 +41,6 @@ export class ServerPanelComponent implements OnInit, OnDestroy {
   private stompClient: CompatClient;
   private isLatWarn: boolean = false;
   uuid: string;
-  logs: SafeHtml[] = [];
 
   ramUsageChart = new Chart({
     chart: {
@@ -158,6 +161,8 @@ export class ServerPanelComponent implements OnInit, OnDestroy {
   ) {
   }
 
+  logs: SafeHtml[] = [];
+
   addLog(log: string) {
     this.http.post<CustomResponse>(`${this.baseUrl}/command/exec/${this.uuid}`, log)
       .subscribe(response => {
@@ -249,7 +254,21 @@ export class ServerPanelComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.uuid = this.route.snapshot.paramMap.get('uuid');
-    this.http.get<string[]>(`${this.baseUrl}/logs/${this.uuid}`)
+
+    let token: string = '';
+    this.http.post<LoginResponse>('http://localhost:8080/api/v1/auth/login', {
+      email: "hubert.rybicki.hr1@gmail.com",
+      password: "1234"
+    }).subscribe(res => {
+        token = res.token
+      console.log(token)
+    });
+
+    this.http.get<string[]>(`${this.baseUrl}/logs/${this.uuid}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
       .subscribe(response => {
         let responseLogs = this.removePrefixFromLogs(response);
         for (let i = 0; i < responseLogs.length; i++) {
@@ -261,7 +280,11 @@ export class ServerPanelComponent implements OnInit, OnDestroy {
 
     const interval$ = interval(5000);
     interval$.subscribe(() => {
-      this.http.get<ServerUsage>(`${this.baseUrl}/usage/${this.uuid}`)
+      this.http.get<ServerUsage>(`${this.baseUrl}/usage/${this.uuid}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('jwtToken')}`
+        }
+      })
         .subscribe(response => {
           const ramUsage = Math.floor(Number(response.ramUsage) / 1024);
           this.addPointToChart(this.ramUsageChart, ramUsage, response.timeStamp.toString())

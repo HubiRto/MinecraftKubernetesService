@@ -7,19 +7,22 @@
     <div class="wrapper">
       <form [formGroup]="loginForm">
         <h1>Logowanie</h1>
-        <div class="input-box">
+        <div class="input-box" [ngClass]="{'error': isEmailValid()}">
           <input type="text" placeholder="Email" required formControlName="email">
           <i class="bx bxs-user"></i>
+          <small *ngIf="isEmailHaveError('required')">*Email jest wymagany</small>
+          <small *ngIf="isEmailHaveError('email')">*Niepoprawny format email</small>
         </div>
-        <div class="input-box">
-          <input type="text" placeholder="Hasło" required formControlName="password">
-          <i class="bx bxs-lock-alt"></i>
+        <div class="input-box" [ngClass]="{'error': isPasswordIsValid()}">
+          <input [type]="passwordInputType" placeholder="Hasło" required formControlName="password">
+          <i class="fa {{ this.passwordIcon }}" (click)="hideShowPass()"></i>
+          <small *ngIf="isPasswordIsValid()">*Hasło jest wymagane</small>
         </div>
         <div class="remember-forgot">
           <label><input type="checkbox"> Zapamiętaj mnie</label>
           <a href="#">Zapomniałeś hasła?</a>
         </div>
-        <button [disabled]="loginForm.invalid" type="submit" class="btn">Zaloguj się</button>
+        <button (click)="onSubmit()" type="submit" class="btn">Zaloguj się</button>
         <div class="register-link">
           <p>Nie masz konta? <a [routerLink]='["/auth/register"]'>Zarejestruj się</a></p>
         </div>
