@@ -10,7 +10,9 @@ pipeline {
         APP_NAME = "MinecraftKubernetesService"
         RELEASE = "1.0.0"
         DOCKER_USER = "hubirto"
-        DOCKER_PASS = '2iw+$+ufL.ZShvY'
+        DOCKER_PASS = 'dockerhub'
+        IMAGE_NAME = "${DOCKER_USER}" + "/" + "${APP_NAME}"
+        IMAGE_TAG = "${RELEASE}-${BUILD_NUMBER}"
     }
 
     stages {
