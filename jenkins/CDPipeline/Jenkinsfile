@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+    environment {
+        APP_NAME = "complete-production-e2e-pipeline"
+    }
+    stages {
+        stage('Cleanup Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('Checkout from SCM') {
+            steps {
+                git branch: 'master', credentialsId: 'jenkins-github-token',
+                 url: 'https://github.com/HubiRto/MinecraftKubernetesService.git'
+            }
+        }
+        stage("Update the Deployment Tags") {
+            steps {
+                sh """
+                    cat deployment.yaml
+                    sed -i 's/${APP_NAME}.*/${APP_NAME}:${IMAGE_TAG}/g' deployment.yaml
+                    cat deployment.yaml
+                """
+            }
+        }
+        stage {
+            steps {
+                sh """
+                    git config --global user.name "hubirto"
+                    git config --global user.email "hubert.rybicki.hr@gmail.com"
+                    git add deployment.yaml
+                    git commit -m "Updated Deployment Manifest"
+                """
+                withCredentials([gitUsernamePassword(credentialsId: 'jenkins-github-token', gitToolName: 'Default')]) {
+                    sh "git push https://github.com/HubiRto/MinecraftKubernetesService master"
+                }
+            }
+        }
+    }
+}
