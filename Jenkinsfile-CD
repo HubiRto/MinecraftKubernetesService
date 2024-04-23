@@ -31,7 +31,7 @@ pipeline {
                     git config --global user.name "hubirto"
                     git config --global user.email "hubert.rybicki.hr@gmail.com"
                     git add deployment.yml
-                    git commit -m "Updated Deployment Manifest"
+                    git commit -m "Updated Deployment Manifest by Jenkins"
                 """
                 withCredentials([gitUsernamePassword(credentialsId: 'jenkins-github-token', gitToolName: 'Default')]) {
                     sh "git push https://github.com/HubiRto/MinecraftKubernetesService master"
