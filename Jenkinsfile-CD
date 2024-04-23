@@ -18,6 +18,7 @@ pipeline {
         stage("Update the Deployment Tags") {
             steps {
                 sh """
+                    echo ${APP_NAME}
                     cat deployment.yml
                     sed -i 's/${APP_NAME}.*/${APP_NAME}:${IMAGE_TAG}/g' deployment.yml
                     cat deployment.yml
