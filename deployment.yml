@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: complete-production-e2e-deployment
+spec:
+  selector:
+    matchLabels:
+      app: complete-production-e2e-app
+  template:
+    metadata:
+      labels:
+        app: complete-production-e2e-app
+    spec:
+      containers:
+        - name: complete-production-e2e-app
+          image: hubirto/minecraft-kubernetes-service:latest
+          resources:
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 8090
