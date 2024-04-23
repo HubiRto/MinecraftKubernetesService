@@ -10,3 +10,4 @@
 - Jenkins runs Second CD Pipeline
 - Update Deployment Tag from Docker Hub in deployment.yml
 - Push the change Deployment File to Github
+- ArgoCD sync project and run Docker Image in Kubernetes k3s
