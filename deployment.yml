@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: complete-production-e2e-app
-          image: hubirto/minecraft-kubernetes-service:latest
+          image: hubirto/minecraft-kubernetes-service:1.0.0-19
           resources:
             limits:
               memory: "256Mi"
