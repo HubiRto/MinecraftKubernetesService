@@ -24,7 +24,7 @@ pipeline {
                 """
             }
         }
-        stage {
+        stage("Push the change deployment file to GIt") {
             steps {
                 sh """
                     git config --global user.name "hubirto"
