@@ -3,10 +3,9 @@ kind: Service
 metadata:
   name: complete-production-e2e-service
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: complete-production-e2e-app
   ports:
     - port: 8090
       targetPort: 8090
-      nodePort: 30000
