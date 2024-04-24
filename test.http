@@ -1,1 +1,13 @@
-GET http://192.169.1.216:8090/api/v1/server/all
+POST http://192.168.1.216:8090/api/v1/server/create
+Content-Type: application/json
+
+{
+  "name": "test",
+  "ram": "1024Mi",
+  "disk": "1024Mi",
+  "version": "1.19.4",
+  "type": "PAPER",
+  "port": 25567,
+  "ipAddress": "192.168.1.219",
+  "rconPort": 28016
+}
