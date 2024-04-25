@@ -16,6 +16,8 @@ import pl.pomoku.minecraftkubernetesservice.dto.response.ServerUsageResponse;
 import pl.pomoku.minecraftkubernetesservice.entity.Server;
 import pl.pomoku.minecraftkubernetesservice.entity.ServerResource;
 import pl.pomoku.minecraftkubernetesservice.entity.ServerType;
+import pl.pomoku.minecraftkubernetesservice.repository.ServerRepository;
+import pl.pomoku.minecraftkubernetesservice.service.ServerService;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ServerResourceManager {
     private final KubernetesClient client;
+    private final ServerRepository serverRepository;
     @Value("${application.volumes.path}")
     private String PATH;
     private static final String MINECRAFT_LABEL_PREFIX = "minecraft-";
@@ -76,9 +79,6 @@ public class ServerResourceManager {
         //create deployments
         Deployment deployment = client.apps().deployments().createOrReplace(createDeployment(request, pvc));
 
-        System.out.println(deployment.getMetadata().getName());
-        System.out.println(deployment.getSpec().getTemplate().getMetadata().getName());
-
         ServerResource serverResource = ServerResource.builder()
                 .server(server)
                 .pvName(pv.getMetadata().getName())
@@ -86,6 +86,10 @@ public class ServerResourceManager {
                 .serviceName(service.getMetadata().getName())
                 .deploymentName(deployment.getMetadata().getName())
                 .build();
+
+        server.setIpAddress(service.getSpec().getClusterIP());
+        serverRepository.save(server);
+
         return serverResource;
     }
 
